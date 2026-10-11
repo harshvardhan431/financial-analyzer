@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Submit Document - BI Analyzer{% endblock %}
+
+{% block content %}
+<div class="container container-narrow" style="padding-top: 40px; padding-bottom: 60px;">
+
+  <!-- Breadcrumbs & Heading -->
+  <div style="margin-bottom: 24px;">
+    <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 8px;">
+      <a href="{{ url_for('index') }}">Home</a> &nbsp;/&nbsp; <span style="color: var(--rose-600); font-weight: 600;">Submit Document</span>
+    </div>
+    <h1 style="font-size: 2.3rem; font-weight: 800; color: var(--text-main); letter-spacing: -0.02em;">
+      Submit Business Document
+    </h1>
+    <p style="color: var(--text-muted); font-size: 1.05rem; margin-top: 6px;">
+      Upload your fiscal records, sales logs, or balance spreadsheets for automated intelligence forecasting.
+    </p>
+  </div>
+
+  {% if error %}
+  <div style="background: var(--danger-bg); border: 1px solid var(--danger-border); color: var(--danger); padding: 14px 20px; border-radius: var(--radius-md); margin-bottom: 24px; display: flex; align-items: center; gap: 10px; font-weight: 500;">
+    <span>⚠️</span>
+    <div>{{ error }}</div>
+  </div>
+  {% endif %}
+
+  <!-- Upload Card -->
+  <div class="upload-card">
+
+    <form action="{{ url_for('submit') }}" method="POST" enctype="multipart/form-data" id="uploadForm">
+      
+      <!-- Interactive Drop Zone -->
+      <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+        <input 
+          type="file" 
+          name="file" 
+          id="fileInput" 
+          class="file-input" 
+          accept=".csv,.xlsx,.xls"
+          onchange="handleFileSelect(event)"
+        >
+        <div class="dropzone-icon">📁</div>
+        <div class="dropzone-title">Click to Browse or Drag & Drop File Here</div>
+        <div class="dropzone-sub">
+          Supports Comma-Separated Values (<strong>.csv</strong>) and Excel Workbooks (<strong>.xlsx, .xls</strong>)
+        </div>
+
+        <button type="button" class="btn btn-secondary" style="pointer-events: none;">
+          Select File from Device
+        </button>
+
+        <!-- Selected File Status Badge -->
+        <div id="fileSelectedBadge" class="file-selected-badge">
+          <span>📄</span>
+          <span id="fileNameDisplay">dataset.csv</span>
+          <span id="fileSizeDisplay" style="color: var(--text-muted); font-size: 0.78rem;">(124 KB)</span>
+          <span style="color: var(--success); font-weight: 700; margin-left: 6px;">Ready</span>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div style="margin-top: 28px; display: flex; flex-wrap: wrap; gap: 14px; align-items: center; justify-content: space-between;">
+        
+        <button type="submit" class="btn btn-primary btn-lg" id="btnSubmitAnalyze" style="flex: 1; min-width: 200px;">
+          <span id="btnSubmitText">Run BI Analysis & Projections</span>
+          <span id="btnSubmitArrow">&rarr;</span>
+        </button>
+
+        <!-- 1-Click Instant Demo Button -->
+        <a href="{{ url_for('submit', demo=1) }}" class="btn btn-soft btn-lg" style="white-space: nowrap;">
+          <span>⚡ Quick Load Sample Dataset</span>
+        </a>
+      </div>
+
+    </form>
+
+    <!-- File Guidelines Section -->
+    <div class="guidelines-box">
+      <div class="guidelines-title">
+        <span>📋</span>
+        <span>Data Ingestion Best Practices</span>
+      </div>
+      <ul class="guidelines-list">
+        <li class="guidelines-item">
+          <span>✓</span>
+          <div><strong>Header Row:</strong> Ensure column headers are in the very first row of your spreadsheet.</div>
+        </li>
+        <li class="guidelines-item">
+          <span>✓</span>
+          <div><strong>Numeric Columns:</strong> At least one numeric field (e.g. Revenue, Sales, Profit, Units, Close).</div>
+        </li>
+        <li class="guidelines-item">
+          <span>✓</span>
+          <div><strong>Chronology:</strong> Optional Date / Month / Period column for time-series ordering and seasonal forecasts.</div>
+        </li>
+        <li class="guidelines-item">
+          <span>✓</span>
+          <div><strong>Data Confidentiality:</strong> Transferred via encrypted in-memory stream; strictly zero persistent cloud caching.</div>
+        </li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- Security & Compliance Assurance Note -->
+  <div style="background: var(--bg-subtle); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 18px 22px; display: flex; align-items: center; gap: 14px;">
+    <div style="font-size: 1.5rem; color: var(--rose-600);">🔒</div>
+    <div style="font-size: 0.86rem; color: var(--text-muted);">
+      <strong style="color: var(--text-main);">Enterprise Confidentiality Guarantee:</strong>
+      All analyses are performed on an ephemeral thread and discarded once the report session terminates. No proprietary company data is logged or retained.
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block script_extra %}
+<script>
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('fileInput');
+  const badge = document.getElementById('fileSelectedBadge');
+  const nameDisplay = document.getElementById('fileNameDisplay');
+  const sizeDisplay = document.getElementById('fileSizeDisplay');
+  const uploadForm = document.getElementById('uploadForm');
+  const btnSubmit = document.getElementById('btnSubmitAnalyze');
+  const btnText = document.getElementById('btnSubmitText');
+
+  // Drag and drop events
+  ['dragenter', 'dragover'].forEach(eventName => {
+    dropzone.addEventListener(eventName, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropzone.classList.add('dragover');
+    }, false);
+  });
+
+  ['dragleave', 'drop'].forEach(eventName => {
+    dropzone.addEventListener(eventName, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropzone.classList.remove('dragover');
+    }, false);
+  });
+
+  dropzone.addEventListener('drop', (e) => {
+    const dt = e.dataTransfer;
+    const files = dt.files;
+    if (files.length > 0) {
+      fileInput.files = files;
+      updateFileBadge(files[0]);
+    }
+  });
+
+  function handleFileSelect(e) {
+    if (e.target.files.length > 0) {
+      updateFileBadge(e.target.files[0]);
+    }
+  }
+
+  function updateFileBadge(file) {
+    badge.style.display = 'inline-flex';
+    nameDisplay.innerText = file.name;
+    const sizeKB = (file.size / 1024).toFixed(1);
+    sizeDisplay.innerText = `(${sizeKB} KB)`;
+    dropzone.style.borderColor = 'var(--rose-500)';
+  }
+
+  uploadForm.addEventListener('submit', () => {
+    if (fileInput.files.length > 0) {
+      btnSubmit.disabled = true;
+      btnText.innerText = "Analyzing & Generating Projections...";
+      btnSubmit.style.opacity = "0.85";
+    }
+  });
+</script>
+{% endblock %}

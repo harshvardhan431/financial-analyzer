@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+
+{% block title %}BI Analyzer - Intelligent Financial & Business Forensics{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-pill">
+      <span class="hero-pill-dot"></span>
+      Enterprise Data Forensics & Automated Forecasting Engine
+    </div>
+
+    <h1 class="hero-title">
+      Executive Business Intelligence, <br>
+      <span class="highlight">Precision Diagnostics</span> & Projections.
+    </h1>
+
+    <p class="hero-subtitle">
+      Upload your CSV or Excel spreadsheets to immediately generate executive statistical baselines, 
+      machine-learning anomaly diagnostics, 3-cycle predictive trajectories, and cross-variable correlation models.
+    </p>
+
+    <!-- Primary Hero Action Buttons -->
+    <div class="hero-actions">
+      <a href="{{ url_for('submit') }}" class="btn btn-primary btn-lg" id="heroSubmitBtn">
+        <span>Submit Document for Analysis</span>
+        <span>&rarr;</span>
+      </a>
+
+      <a href="{{ url_for('output', sample=1) }}" class="btn btn-secondary btn-lg" id="heroDemoBtn">
+        <span>Explore Sample Dashboard</span>
+        <span>📊</span>
+      </a>
+
+      <a href="#query" onclick="triggerQueryFocus(event)" class="btn btn-soft btn-lg" id="heroQueryBtn">
+        <span>Query Assistant</span>
+        <span>💬</span>
+      </a>
+    </div>
+
+    <!-- Quick Stat Highlights -->
+    <div class="hero-stats-row">
+      <div class="hero-stat-card">
+        <div class="hero-stat-icon">⚡</div>
+        <div>
+          <div class="hero-stat-val">&lt; 350ms</div>
+          <div class="hero-stat-lbl">In-Memory Processing Speed</div>
+        </div>
+      </div>
+
+      <div class="hero-stat-card">
+        <div class="hero-stat-icon">🌲</div>
+        <div>
+          <div class="hero-stat-val">Isolation Forest</div>
+          <div class="hero-stat-lbl">Automated Anomaly Detection</div>
+        </div>
+      </div>
+
+      <div class="hero-stat-card">
+        <div class="hero-stat-icon">📈</div>
+        <div>
+          <div class="hero-stat-val">3-Cycle Vector</div>
+          <div class="hero-stat-lbl">Predictive Linear Regressions</div>
+        </div>
+      </div>
+
+      <div class="hero-stat-card">
+        <div class="hero-stat-icon">🔒</div>
+        <div>
+          <div class="hero-stat-val">100% Private</div>
+          <div class="hero-stat-lbl">Zero Data Retention Memory</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- Main Container for Home Interactive Sections -->
+<div class="container" style="padding-top: 20px; padding-bottom: 50px;">
+
+  <!-- Interactive Query Section & Search Assistant -->
+  <section class="section-card" id="query">
+    <div class="section-head">
+      <span class="section-badge">Natural Query Engine</span>
+      <h2 class="section-title">Query Your Business Data & Metrics</h2>
+      <p class="section-desc">
+        Type an analytical query or click one of our intelligent preset query topics to instantly see insights and diagnostic answers.
+      </p>
+    </div>
+
+    <div class="query-box">
+      <div class="query-input-wrap">
+        <input 
+          type="text" 
+          id="queryInput" 
+          class="query-input" 
+          placeholder="Ask a query (e.g. 'How does anomaly detection work?', 'Show forecast methodology', 'What is volatility cv?')..."
+        >
+        <button type="button" class="btn btn-primary" onclick="runQuery()" id="btnRunQuery">
+          <span>Run Query</span>
+          <span>&rarr;</span>
+        </button>
+      </div>
+
+      <!-- Preset Quick-Query Pills -->
+      <div class="query-presets">
+        <span class="query-presets-label">Popular queries:</span>
+        <button type="button" class="query-pill" onclick="setQuery('How does BI Analyzer detect anomalies?')">⚠️ Anomaly Detection Method</button>
+        <button type="button" class="query-pill" onclick="setQuery('How are future 3 periods projected?')">📈 Forecast Projections</button>
+        <button type="button" class="query-pill" onclick="setQuery('What formats of files can I submit?')">📄 Supported File Formats</button>
+        <button type="button" class="query-pill" onclick="setQuery('What does Volatility CV represent?')">📊 Volatility Metric</button>
+        <button type="button" class="query-pill" onclick="setQuery('What is cross-variable correlation?')">🔗 Cross Correlation</button>
+      </div>
+
+      <!-- Query Output Display -->
+      <div id="queryResultBox" class="query-result-box">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+          <strong id="queryResultTitle" style="color:var(--rose-700); font-size:1.05rem;">Query Answer</strong>
+          <span style="font-size:0.75rem; background:var(--rose-100); color:var(--rose-800); padding:2px 8px; border-radius:12px; font-weight:600;">BI Intelligence</span>
+        </div>
+        <p id="queryResultText" style="font-size:0.92rem; color:var(--text-secondary); line-height:1.6;"></p>
+        <div style="margin-top:14px; display:flex; gap:10px;">
+          <a href="{{ url_for('submit') }}" class="btn btn-primary" style="padding:6px 14px; font-size:0.82rem;">Submit Your File</a>
+          <a href="{{ url_for('output', sample=1) }}" class="btn btn-secondary" style="padding:6px 14px; font-size:0.82rem;">Inspect Demo Dashboard</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- About Us Section -->
+  <section class="section-card" id="about">
+    <div class="section-head">
+      <span class="section-badge">Corporate Profile</span>
+      <h2 class="section-title">About BI Analyzer</h2>
+      <p class="section-desc">
+        Designed for executive decision makers, data analysts, and financial teams seeking instant, mathematical clarity without heavyweight BI overhead.
+      </p>
+    </div>
+
+    <div class="about-grid">
+      <div class="about-card">
+        <div class="about-card-icon">🎯</div>
+        <h3 class="about-card-title">Mission-Driven Clarity</h3>
+        <p class="about-card-text">
+          BI Analyzer automates the crucial first 90% of business exploratory data analysis. 
+          We transform dense rows into immediate executive findings, high-fidelity trend slopes, and baseline KPIs in seconds.
+        </p>
+      </div>
+
+      <div class="about-card">
+        <div class="about-card-icon">🧠</div>
+        <h3 class="about-card-title">Machine Learning Forensics</h3>
+        <p class="about-card-text">
+          By utilizing Scikit-Learn’s Isolation Forest algorithm, our platform detects multi-dimensional outliers and unusual transactional spikes that standard threshold rules overlook.
+        </p>
+      </div>
+
+      <div class="about-card">
+        <div class="about-card-icon">🔮</div>
+        <h3 class="about-card-title">Predictive Vector Trajectories</h3>
+        <p class="about-card-text">
+          Our adaptive linear regression modeling projects upcoming fiscal periods based on chronological trend momentum, providing early indicators of market contraction or growth.
+        </p>
+      </div>
+
+      <div class="about-card">
+        <div class="about-card-icon">🛡️</div>
+        <h3 class="about-card-title">Bank-Grade Privacy</h3>
+        <p class="about-card-text">
+          Your confidential financial ledgers are parsed ephemerally in-memory. Zero data is retained on public disk caches or shared with external third-party models.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Ready to Analyze Banner / Action Card -->
+  <section class="section-card" style="background: linear-gradient(135deg, #fff5f8 0%, #ffffff 60%, #fef2f6 100%); border-color: var(--rose-200); text-align: center; padding: 48px 24px;">
+    <h2 style="font-size: 2rem; color: var(--text-main); margin-bottom: 12px; font-weight: 800;">
+      Ready to analyze your business metrics?
+    </h2>
+    <p style="color: var(--text-muted); max-width: 580px; margin: 0 auto 28px; font-size: 1.05rem;">
+      Upload your monthly financial books, transactional logs, or KPIs. Experience our comprehensive long-page interactive dashboard.
+    </p>
+    <div style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;">
+      <a href="{{ url_for('submit') }}" class="btn btn-primary btn-lg" id="ctaSubmitBottom">
+        <span>Go to Submit Document Page</span>
+        <span>&rarr;</span>
+      </a>
+      <a href="{{ url_for('output', sample=1) }}" class="btn btn-secondary btn-lg" id="ctaSampleBottom">
+        <span>View Demo Report</span>
+      </a>
+    </div>
+  </section>
+
+</div>
+
+{% endblock %}
+
+{% block script_extra %}
+<script>
+  const queryKnowledge = {
+    "anomaly": {
+      title: "Isolation Forest Anomaly Detection",
+      text: "BI Analyzer leverages Scikit-Learn's Isolation Forest algorithm with 5% contamination tuning. It evaluates all numeric columns simultaneously, isolating abnormal multi-dimensional clusters and transaction spikes that deviate from your normal operational variance."
+    },
+    "forecast": {
+      title: "Predictive Linear Regression Model",
+      text: "Projections are modeled via scikit-learn Linear Regression across your indexed chronological records. The model fits slope velocity and historical trajectory to output expected metric volume for the next 3 successive periods."
+    },
+    "formats": {
+      title: "Supported File Formats",
+      text: "BI Analyzer supports Comma-Separated Values (.csv), Microsoft Excel Workbooks (.xlsx), and legacy Excel files (.xls). Simply ensure your dataset has at least one numeric column (e.g., Revenue, Sales, Profit) and optionally a Date column."
+    },
+    "volatility": {
+      title: "Coefficient of Variation (CV) Risk Metric",
+      text: "Volatility is measured as the ratio of standard deviation to the metric mean (CV %). Under 10% is classified as Low Volatility (stable), 10% - 30% as Moderate Volatility, and above 30% as High Volatility (elevated risk/variance)."
+    },
+    "correlation": {
+      title: "Cross-Variable Correlation Matrix",
+      text: "BI Analyzer calculates Pearson correlation coefficients between every pair of numeric metrics. Scores close to +1.0 indicate strong synchronized growth (e.g. Revenue & Expenses), while values near -1.0 signify inverse operational relationships."
+    }
+  };
+
+  function setQuery(text) {
+    const qInput = document.getElementById('queryInput');
+    qInput.value = text;
+    runQuery();
+  }
+
+  function runQuery() {
+    const qInput = document.getElementById('queryInput');
+    const val = qInput.value.toLowerCase().trim();
+    const resultBox = document.getElementById('queryResultBox');
+    const resultTitle = document.getElementById('queryResultTitle');
+    const resultText = document.getElementById('queryResultText');
+
+    if (!val) {
+      qInput.focus();
+      return;
+    }
+
+    resultBox.style.display = 'block';
+
+    if (val.includes('anomaly') || val.includes('outlier') || val.includes('unusual')) {
+      resultTitle.innerText = queryKnowledge.anomaly.title;
+      resultText.innerText = queryKnowledge.anomaly.text;
+    } else if (val.includes('forecast') || val.includes('project') || val.includes('future')) {
+      resultTitle.innerText = queryKnowledge.forecast.title;
+      resultText.innerText = queryKnowledge.forecast.text;
+    } else if (val.includes('format') || val.includes('file') || val.includes('csv') || val.includes('excel')) {
+      resultTitle.innerText = queryKnowledge.formats.title;
+      resultText.innerText = queryKnowledge.formats.text;
+    } else if (val.includes('volat') || val.includes('cv') || val.includes('risk')) {
+      resultTitle.innerText = queryKnowledge.volatility.title;
+      resultText.innerText = queryKnowledge.volatility.text;
+    } else if (val.includes('corr') || val.includes('relat') || val.includes('margin')) {
+      resultTitle.innerText = queryKnowledge.correlation.title;
+      resultText.innerText = queryKnowledge.correlation.text;
+    } else {
+      resultTitle.innerText = `BI Query Analysis: "${qInput.value}"`;
+      resultText.innerText = `BI Analyzer's automated data pipeline scans your dataset for '${qInput.value}'. To see customized insights on your exact business numbers, submit your document via our Submit Document portal or explore the preloaded Demo Dashboard.`;
+    }
+  }
+
+  document.getElementById('queryInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') runQuery();
+  });
+</script>
+{% endblock %}

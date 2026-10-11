@@ -1,0 +1,730 @@
+{% extends "base.html" %}
+
+{% block title %}BI Analyzer - Forensic Intelligence Report{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 24px; padding-bottom: 80px;">
+
+  <!-- Top Breadcrumb & Report Actions -->
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; margin-bottom: 12px;">
+    <div style="font-size: 0.84rem; color: var(--text-muted);">
+      <a href="{{ url_for('index') }}">Home</a> &nbsp;/&nbsp; 
+      <a href="{{ url_for('submit') }}">Submit</a> &nbsp;/&nbsp; 
+      <span style="color: var(--rose-600); font-weight: 600;">Executive Report</span>
+    </div>
+
+    <div style="display: flex; gap: 10px;">
+      <button type="button" class="btn btn-secondary" onclick="window.print()" id="btnPrintReport">
+        <span>🖨️ Print / Export PDF</span>
+      </button>
+      <a href="{{ url_for('submit') }}" class="btn btn-primary" id="btnNewUpload">
+        <span>+ Submit New File</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Executive Dashboard Header Banner -->
+  <div class="dashboard-header">
+    <div>
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+        <span class="brand-badge" style="padding: 4px 8px; font-size: 0.75rem;">BI ANALYZER</span>
+        <h1 style="font-size: 1.8rem; font-weight: 800; color: var(--text-main); margin: 0; letter-spacing: -0.02em;">
+          Forensic Business Intelligence Dashboard
+        </h1>
+      </div>
+      <p style="color: var(--text-muted); font-size: 0.95rem; margin: 0;">
+        Automated statistical variance analysis, Isolation Forest outlier audit, and multi-cycle predictive vector modeling.
+      </p>
+
+      <!-- Metadata Chips -->
+      <div class="dash-meta">
+        <span class="meta-chip highlight">
+          <span>🎯 Target Metric:</span>
+          <strong>{{ result.target }}</strong>
+        </span>
+        <span class="meta-chip">
+          <span>📁 Records:</span>
+          <strong>{{ result.metrics.total_rows }} rows</strong>
+        </span>
+        <span class="meta-chip">
+          <span>📊 Dimensions:</span>
+          <strong>{{ result.metrics.total_cols }} columns</strong>
+        </span>
+        <span class="meta-chip">
+          <span>⚠️ Missing Cells:</span>
+          <strong>{{ result.metrics.missing_values }}</strong>
+        </span>
+        <span class="meta-chip">
+          <span>⏱️ Generated:</span>
+          <strong>{{ report_time }}</strong>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       SECTION 1: EXECUTIVE KPI SUMMARY TILES (6 CARDS)
+       ============================================================ -->
+  <div class="kpi-grid">
+    
+    <!-- KPI 1: Total Volume -->
+    <div class="kpi-card">
+      <div class="kpi-label">Aggregated Volume</div>
+      <div class="kpi-val" style="color: var(--rose-700);">
+        {{ "{:,.2f}".format(result.metrics.target_sum) }}
+      </div>
+      <div class="kpi-foot">
+        <span class="pill-status pill-info">Cumulative</span>
+        <span>Across all {{ result.metrics.total_rows }} cycles</span>
+      </div>
+    </div>
+
+    <!-- KPI 2: Average Baseline -->
+    <div class="kpi-card">
+      <div class="kpi-label">Periodic Average</div>
+      <div class="kpi-val">
+        {{ "{:,.2f}".format(result.metrics.target_mean) }}
+      </div>
+      <div class="kpi-foot">
+        <span class="pill-status pill-info">Mean</span>
+        <span>Baseline per period</span>
+      </div>
+    </div>
+
+    <!-- KPI 3: Extreme Peak -->
+    <div class="kpi-card">
+      <div class="kpi-label">Peak Maximum</div>
+      <div class="kpi-val">
+        {{ "{:,.2f}".format(result.metrics.target_max) }}
+      </div>
+      <div class="kpi-foot">
+        <span style="color: var(--text-muted); font-size: 0.72rem;">Min recorded: {{ "{:,.2f}".format(result.metrics.target_min) }}</span>
+      </div>
+    </div>
+
+    <!-- KPI 4: Net Growth Vector -->
+    <div class="kpi-card">
+      <div class="kpi-label">Trend Velocity</div>
+      <div class="kpi-val" style="color: {% if result.metrics.slope >= 0 %}var(--success){% else %}var(--danger){% endif %};">
+        {{ "{:+.1f}%".format(result.metrics.growth_pct) }}
+      </div>
+      <div class="kpi-foot">
+        <span class="pill-status {% if result.metrics.slope >= 0 %}pill-success{% else %}pill-danger{% endif %}">
+          {{ result.metrics.direction|upper }}
+        </span>
+        <span>{{ "{:+,.2f}".format(result.metrics.slope) }}/period</span>
+      </div>
+    </div>
+
+    <!-- KPI 5: Volatility Index -->
+    <div class="kpi-card">
+      <div class="kpi-label">Volatility Risk</div>
+      <div class="kpi-val">
+        {{ result.metrics.volatility_level }}
+      </div>
+      <div class="kpi-foot">
+        <span class="pill-status {% if result.metrics.volatility_level == 'High' %}pill-danger{% elif result.metrics.volatility_level == 'Moderate' %}pill-warning{% else %}pill-success{% endif %}">
+          CV: {{ result.metrics.volatility_cv }}%
+        </span>
+        <span>Standard variance</span>
+      </div>
+    </div>
+
+    <!-- KPI 6: Flagged Outliers -->
+    <div class="kpi-card">
+      <div class="kpi-label">Statistical Outliers</div>
+      <div class="kpi-val" style="color: {% if result.metrics.anomalies_count > 0 %}var(--rose-600){% else %}var(--success){% endif %};">
+        {{ result.metrics.anomalies_count }} Flagged
+      </div>
+      <div class="kpi-foot">
+        <span class="pill-status {% if result.metrics.anomalies_count > 0 %}pill-danger{% else %}pill-success{% endif %}">
+          Isolation Forest
+        </span>
+        <span>5% Contamination</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ============================================================
+       SECTION 2: PRIMARY INTERACTIVE VISUALIZATIONS
+       ============================================================ -->
+  <div class="charts-grid">
+    
+    <!-- Flagship Chart: Actual vs Predictive Forecast -->
+    <div class="chart-card">
+      <div class="chart-head">
+        <div>
+          <h2 class="chart-title">Primary Trajectory: {{ result.target }} (Actual vs. Forecast)</h2>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+            Historical values mapped alongside 3-cycle forward linear projections with soft confidence bounds.
+          </p>
+        </div>
+        <span class="chart-badge">Linear Regression</span>
+      </div>
+      <div class="canvas-container" style="height: 340px;">
+        <canvas id="primaryChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Chart 2: Period-over-Period Growth Bar Chart -->
+    <div class="chart-card">
+      <div class="chart-head">
+        <div>
+          <h2 class="chart-title">Cycle Velocity (% Change)</h2>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+            Period-over-period percentage shift.
+          </p>
+        </div>
+        <span class="chart-badge">Momentum</span>
+      </div>
+      <div class="canvas-container" style="height: 340px;">
+        <canvas id="growthBarChart"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Secondary Charts Grid: Multi-Metric Dynamics -->
+  {% if result.numeric_columns|length > 1 %}
+  <div class="charts-grid" style="grid-template-columns: 1.5fr 1fr; margin-bottom: 32px;">
+    
+    <!-- Chart 3: Multi-Metric Comparative Dynamics -->
+    <div class="chart-card">
+      <div class="chart-head">
+        <div>
+          <h2 class="chart-title">Multi-Metric Comparative Dynamics</h2>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+            Normalized trend comparisons across all identified numeric columns.
+          </p>
+        </div>
+        <span class="chart-badge">Cross-Dimension</span>
+      </div>
+      <div class="canvas-container" style="height: 290px;">
+        <canvas id="multiMetricChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Chart 4: Metric Aggregate Distribution Doughnut -->
+    <div class="chart-card">
+      <div class="chart-head">
+        <div>
+          <h2 class="chart-title">Volume Proportions</h2>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+            Aggregate cumulative share of numeric parameters.
+          </p>
+        </div>
+        <span class="chart-badge">Distribution</span>
+      </div>
+      <div class="canvas-container" style="height: 290px;">
+        <canvas id="distributionChart"></canvas>
+      </div>
+    </div>
+
+  </div>
+  {% endif %}
+
+  <!-- ============================================================
+       SECTION 3: EXECUTIVE FINDINGS & AI NARRATIVE
+       ============================================================ -->
+  <div class="section-card">
+    <div class="section-head" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+      <div>
+        <span class="section-badge">Automated Synthesis</span>
+        <h2 class="section-title">Executive Diagnostic Findings</h2>
+        <p class="section-desc">Key takeaways generated by BI Analyzer's statistical engine.</p>
+      </div>
+      <span class="meta-chip highlight" style="font-size:0.8rem;">
+        {{ result.structured_findings|length }} Findings Categorized
+      </span>
+    </div>
+
+    <div class="findings-grid">
+      {% for item in result.structured_findings %}
+      <div class="finding-card {{ item.type }}">
+        <div>
+          <div class="finding-header">
+            <span class="finding-category">{{ item.category }}</span>
+            <span class="pill-status pill-{{ item.type }}">{{ item.type|upper }}</span>
+          </div>
+          <h3 class="finding-title">{{ item.title }}</h3>
+          <p class="finding-body">{{ item.text }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- ============================================================
+       SECTION 4: PREDICTIVE FORECAST MATRIX & PROJECTION TABLE
+       ============================================================ -->
+  <div class="section-card">
+    <div class="section-head">
+      <span class="section-badge">Forward Modeling</span>
+      <h2 class="section-title">3-Period Forward Forecast Matrix</h2>
+      <p class="section-desc">
+        Algorithmic extension based on linear vector momentum for <strong>{{ result.target }}</strong>.
+      </p>
+    </div>
+
+    <div class="table-responsive">
+      <table class="dash-table">
+        <thead>
+          <tr>
+            <th>Projection Horizon</th>
+            <th>Projected Label</th>
+            <th>Estimated Metric Value</th>
+            <th>Expected Growth Rate</th>
+            <th>Direction</th>
+            <th>Confidence Assessment</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for f in result.forecast_items %}
+          <tr>
+            <td><strong>Period +{{ f.step }}</strong></td>
+            <td><code>{{ f.label }}</code></td>
+            <td style="font-weight: 700; color: var(--rose-700); font-size: 1rem;">
+              {{ "{:,.2f}".format(f.value) }}
+            </td>
+            <td>
+              <span class="pill-status {% if f.delta_pct >= 0 %}pill-success{% else %}pill-danger{% endif %}">
+                {{ "{:+.1f}%".format(f.delta_pct) }}
+              </span>
+            </td>
+            <td>
+              {% if f.trend == 'up' %}
+                <span style="color: var(--success); font-weight: 600;">↗ Ascending</span>
+              {% else %}
+                <span style="color: var(--danger); font-weight: 600;">↘ Descending</span>
+              {% endif %}
+            </td>
+            <td style="color: var(--text-muted); font-size: 0.84rem;">
+              High Model Correlation &bull; Deterministic Vector
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       SECTION 5: CORRELATION LEDGER & ANOMALY INVESTIGATION LOG
+       ============================================================ -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px; margin-bottom: 36px;">
+    
+    <!-- Cross-Variable Synergy Ledger -->
+    <div class="section-card" style="margin-bottom: 0;">
+      <div class="section-head">
+        <span class="section-badge">Synergy Mapping</span>
+        <h2 class="section-title" style="font-size: 1.4rem;">Top Variable Correlations</h2>
+        <p class="section-desc">Pearson coefficients between metric dimensions.</p>
+      </div>
+
+      {% if result.correlations and result.correlations|length > 0 %}
+        <div>
+          {% for c in result.correlations %}
+          <div class="corr-item">
+            <div>
+              <div class="corr-vars">{{ c.var1 }} &harr; {{ c.var2 }}</div>
+              <div style="font-size: 0.76rem; color: var(--text-muted);">{{ c.strength }}</div>
+            </div>
+            <div class="corr-meter-wrap">
+              <div class="corr-meter">
+                <div class="corr-fill" style="width: {{ (c.abs_score * 100)|int }}%;"></div>
+              </div>
+              <span class="corr-val">{{ "{:+.2f}".format(c.score) }}</span>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p style="color: var(--text-muted); font-size: 0.9rem; padding: 10px 0;">
+          Only one numeric dimension present in dataset; cross-variable correlations require 2 or more numeric fields.
+        </p>
+      {% endif %}
+    </div>
+
+    <!-- Anomaly & Risk Investigation Log -->
+    <div class="section-card" style="margin-bottom: 0;">
+      <div class="section-head">
+        <span class="section-badge">Outlier Audit</span>
+        <h2 class="section-title" style="font-size: 1.4rem;">Flagged Anomaly Audit</h2>
+        <p class="section-desc">Records marked by Isolation Forest clustering.</p>
+      </div>
+
+      {% if result.anomalies_details and result.anomalies_details|length > 0 %}
+        <div class="table-responsive">
+          <table class="dash-table">
+            <thead>
+              <tr>
+                <th>Record #</th>
+                <th>Period</th>
+                <th>Value</th>
+                <th>Evaluation</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for anom in result.anomalies_details %}
+              <tr>
+                <td><code>#{{ anom.index }}</code></td>
+                <td><strong>{{ anom.label }}</strong></td>
+                <td style="color: var(--danger); font-weight: 700;">{{ "{:,.2f}".format(anom.value) }}</td>
+                <td>
+                  <span class="pill-status pill-danger">Cluster Outlier</span>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div style="padding: 24px; text-align: center; background: var(--success-bg); border-radius: var(--radius-md); border: 1px solid var(--success-border);">
+          <div style="font-size: 1.6rem; color: var(--success); margin-bottom: 6px;">✓</div>
+          <strong style="color: var(--success);">Clean Cluster Distribution</strong>
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">
+            No records triggered the 5% Isolation Forest anomaly contamination threshold.
+          </p>
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
+
+  <!-- ============================================================
+       SECTION 6: NUMERIC STATISTICAL LEDGER (ALL COLUMNS)
+       ============================================================ -->
+  <div class="section-card">
+    <div class="section-head">
+      <span class="section-badge">Descriptive Statistics</span>
+      <h2 class="section-title">Column Statistical Ledger</h2>
+      <p class="section-desc">Summary parameters across all identified numeric attributes.</p>
+    </div>
+
+    <div class="table-responsive">
+      <table class="dash-table">
+        <thead>
+          <tr>
+            <th>Dimension Name</th>
+            <th>Mean (Average)</th>
+            <th>Std Deviation</th>
+            <th>Minimum</th>
+            <th>Maximum</th>
+            <th>Cumulative Total</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in result.column_stats %}
+          <tr>
+            <td>
+              <strong>{{ s.name }}</strong>
+              {% if s.is_target %}
+                <span class="badge-target">TARGET</span>
+              {% endif %}
+            </td>
+            <td>{{ "{:,.2f}".format(s.mean) }}</td>
+            <td>{{ "{:,.2f}".format(s.std) }}</td>
+            <td>{{ "{:,.2f}".format(s.min) }}</td>
+            <td>{{ "{:,.2f}".format(s.max) }}</td>
+            <td style="font-weight: 600; color: var(--text-main);">{{ "{:,.2f}".format(s.sum) }}</td>
+            <td>
+              <span class="pill-status pill-info">Active</span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       SECTION 7: INTERACTIVE RAW DATA EXPLORER TABLE
+       ============================================================ -->
+  <div class="section-card" id="dataTableSection">
+    <div class="section-head" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+      <div>
+        <span class="section-badge">Dataset Ingestion</span>
+        <h2 class="section-title">Ingested Record Preview</h2>
+        <p class="section-desc">Inspecting first {{ result.preview_rows|length }} rows with live client filter.</p>
+      </div>
+
+      <div style="position: relative; width: 260px;">
+        <input 
+          type="text" 
+          id="tableFilterInput"
+          class="search-input" 
+          placeholder="Filter preview records..." 
+          style="padding-left: 14px;"
+          onkeyup="filterPreviewTable()"
+        >
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="dash-table" id="previewDataTable">
+        <thead>
+          <tr>
+            {% for col in result.preview_cols %}
+              <th>{{ col }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in result.preview_rows %}
+          <tr>
+            {% for col in result.preview_cols %}
+              <td>
+                {% if row[col] is number %}
+                  {{ "{:,.2f}".format(row[col]) }}
+                {% else %}
+                  {{ row[col] }}
+                {% endif %}
+              </td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Sticky Bottom Quick Navigation Dock -->
+  <div class="sticky-bar">
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span class="brand-badge" style="padding: 3px 6px; font-size: 0.7rem;">BI</span>
+      <span style="font-size: 0.86rem; font-weight: 600; color: var(--text-main);">Report: {{ result.target }}</span>
+    </div>
+    <div style="display: flex; gap: 10px;">
+      <button type="button" class="btn btn-secondary" style="padding: 6px 14px; font-size: 0.84rem;" onclick="window.print()">
+        🖨️ Export PDF
+      </button>
+      <a href="{{ url_for('submit') }}" class="btn btn-primary" style="padding: 6px 14px; font-size: 0.84rem;">
+        + Analyze Another File
+      </a>
+      <button type="button" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.84rem;" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+        &uarr; Top
+      </button>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}
+
+{% block script_extra %}
+<script>
+  // Primary Actual vs Forecast Line Chart
+  const rawLabels = {{ result.labels | tojson }};
+  const rawActual = {{ result.actual | tojson }};
+  const rawForecast = {{ result.forecast | tojson }};
+  const forecastLabels = {{ result.forecast_labels | tojson }};
+  const anomaliesList = {{ result.anomalies | tojson }};
+
+  const combinedLabels = rawLabels.concat(forecastLabels);
+
+  // Pad forecast so it seamlessly connects from the last actual point
+  const forecastSeries = Array(rawActual.length - 1).fill(null)
+    .concat([rawActual[rawActual.length - 1]])
+    .concat(rawForecast);
+
+  // Anomaly point highlight styling
+  const pointBgColors = rawLabels.map(lbl => anomaliesList.includes(lbl) ? '#e11d48' : '#ffffff');
+  const pointBorderColors = rawLabels.map(lbl => anomaliesList.includes(lbl) ? '#881337' : '#e11d48');
+  const pointRadii = rawLabels.map(lbl => anomaliesList.includes(lbl) ? 7 : 4);
+
+  const ctxPrimary = document.getElementById('primaryChart');
+  if (ctxPrimary) {
+    new Chart(ctxPrimary, {
+      type: 'line',
+      data: {
+        labels: combinedLabels,
+        datasets: [
+          {
+            label: 'Historical Actual (' + {{ result.target|tojson }} + ')',
+            data: rawActual,
+            borderColor: '#e11d48',
+            backgroundColor: 'rgba(225, 29, 72, 0.08)',
+            fill: true,
+            tension: 0.35,
+            borderWidth: 2.5,
+            pointBackgroundColor: pointBgColors,
+            pointBorderColor: pointBorderColors,
+            pointRadius: pointRadii,
+            pointHoverRadius: 8
+          },
+          {
+            label: '3-Cycle Predictive Vector',
+            data: forecastSeries,
+            borderColor: '#be123c',
+            backgroundColor: 'transparent',
+            borderDash: [6, 4],
+            borderWidth: 2.5,
+            tension: 0.2,
+            pointBackgroundColor: '#be123c',
+            pointRadius: 5
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: { font: { family: 'Inter', size: 12 }, usePointStyle: true }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                let val = context.parsed.y;
+                let text = context.dataset.label + ': ' + Number(val).toLocaleString(undefined, {minimumFractionDigits: 2});
+                if (anomaliesList.includes(context.label)) {
+                  text += ' ⚠️ [OUTLIER]';
+                }
+                return text;
+              }
+            }
+          }
+        },
+        scales: {
+          x: { grid: { color: 'rgba(243, 226, 232, 0.4)' }, ticks: { font: { size: 11 } } },
+          y: { grid: { color: 'rgba(243, 226, 232, 0.6)' }, ticks: { font: { size: 11 } } }
+        }
+      }
+    });
+  }
+
+  // Chart 2: Period-over-Period Growth Bar Chart
+  const ctxGrowth = document.getElementById('growthBarChart');
+  const growthData = {{ result.period_growth | tojson }};
+  if (ctxGrowth) {
+    const barColors = growthData.map(v => v >= 0 ? 'rgba(5, 150, 105, 0.8)' : 'rgba(225, 29, 72, 0.8)');
+    new Chart(ctxGrowth, {
+      type: 'bar',
+      data: {
+        labels: rawLabels,
+        datasets: [{
+          label: 'Cycle % Growth',
+          data: growthData,
+          backgroundColor: barColors,
+          borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          x: { display: false },
+          y: {
+            grid: { color: 'rgba(243, 226, 232, 0.6)' },
+            ticks: { callback: v => v + '%' }
+          }
+        }
+      }
+    });
+  }
+
+  // Multi-Metric Comparative Chart
+  const seriesData = {{ result.series_data | tojson }};
+  const numCols = {{ result.numeric_columns | tojson }};
+  const ctxMulti = document.getElementById('multiMetricChart');
+
+  if (ctxMulti && numCols.length > 1) {
+    const colorPalette = [
+      { border: '#e11d48', bg: 'rgba(225, 29, 72, 0.05)' },
+      { border: '#0284c7', bg: 'rgba(2, 132, 199, 0.05)' },
+      { border: '#059669', bg: 'rgba(5, 150, 105, 0.05)' },
+      { border: '#d97706', bg: 'rgba(217, 119, 6, 0.05)' },
+      { border: '#7c3aed', bg: 'rgba(124, 58, 237, 0.05)' }
+    ];
+
+    const multiDatasets = numCols.slice(0, 5).map((col, idx) => {
+      const c = colorPalette[idx % colorPalette.length];
+      return {
+        label: col,
+        data: seriesData[col] || [],
+        borderColor: c.border,
+        backgroundColor: c.bg,
+        borderWidth: 2,
+        tension: 0.3,
+        pointRadius: 2
+      };
+    });
+
+    new Chart(ctxMulti, {
+      type: 'line',
+      data: {
+        labels: rawLabels,
+        datasets: multiDatasets
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top', labels: { usePointStyle: true, font: { size: 11 } } }
+        },
+        scales: {
+          x: { grid: { color: 'rgba(243, 226, 232, 0.4)' } },
+          y: { grid: { color: 'rgba(243, 226, 232, 0.6)' } }
+        }
+      }
+    });
+  }
+
+  // Volume Distribution Doughnut
+  const ctxDist = document.getElementById('distributionChart');
+  const colStats = {{ result.column_stats | tojson }};
+  if (ctxDist && colStats.length > 1) {
+    const distLabels = colStats.map(s => s.name);
+    const distValues = colStats.map(s => s.sum);
+    new Chart(ctxDist, {
+      type: 'doughnut',
+      data: {
+        labels: distLabels,
+        datasets: [{
+          data: distValues,
+          backgroundColor: ['#e11d48', '#0284c7', '#059669', '#d97706', '#7c3aed'],
+          borderWidth: 2,
+          borderColor: '#ffffff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { font: { size: 11 }, usePointStyle: true } }
+        },
+        cutout: '65%'
+      }
+    });
+  }
+
+  // Interactive Live Filter for Data Preview Table
+  function filterPreviewTable() {
+    const input = document.getElementById("tableFilterInput");
+    const filter = input.value.toUpperCase();
+    const table = document.getElementById("previewDataTable");
+    const tr = table.getElementsByTagName("tr");
+
+    for (let i = 1; i < tr.length; i++) {
+      let visible = false;
+      const tds = tr[i].getElementsByTagName("td");
+      for (let j = 0; j < tds.length; j++) {
+        if (tds[j]) {
+          const txtValue = tds[j].textContent || tds[j].innerText;
+          if (txtValue.toUpperCase().indexOf(filter) > -1) {
+            visible = true;
+            break;
+          }
+        }
+      }
+      tr[i].style.display = visible ? "" : "none";
+    }
+  }
+</script>
+{% endblock %}

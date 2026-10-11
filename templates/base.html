@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}BI Analyzer - Enterprise Business Intelligence & Predictive Forensics{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  {% block head_extra %}{% endblock %}
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="navbar">
+    <div class="container nav-container">
+      
+      <!-- Brand Logo -->
+      <a href="{{ url_for('index') }}" class="brand">
+        <span class="brand-badge">BI</span>
+        <span class="brand-text">Analyzer</span>
+      </a>
+
+      <!-- Quick Search Bar -->
+      <div class="nav-search">
+        <div class="search-input-wrap">
+          <span class="search-icon">🔍</span>
+          <input 
+            type="text" 
+            id="navSearchInput"
+            class="search-input" 
+            placeholder="Search metrics, reports, queries..." 
+            autocomplete="off"
+          >
+        </div>
+        <!-- Live Search Dropdown -->
+        <div id="navSearchDropdown" class="search-dropdown">
+          <div class="search-item" onclick="handleSearchSelect('submit')">
+            <span>📄 Submit New Document (.csv, .xlsx)</span>
+            <span class="search-tag">Action</span>
+          </div>
+          <div class="search-item" onclick="handleSearchSelect('sample')">
+            <span>📊 Open Sample Financial Dashboard</span>
+            <span class="search-tag">Dashboard</span>
+          </div>
+          <div class="search-item" onclick="handleSearchSelect('anomalies')">
+            <span>⚠️ Anomaly Detection & Outlier Rules</span>
+            <span class="search-tag">ML Feature</span>
+          </div>
+          <div class="search-item" onclick="handleSearchSelect('forecast')">
+            <span>📈 3-Period Predictive Forecasting</span>
+            <span class="search-tag">Analytics</span>
+          </div>
+          <div class="search-item" onclick="handleSearchSelect('about')">
+            <span>ℹ️ About BI Analyzer Intelligence Engine</span>
+            <span class="search-tag">Overview</span>
+          </div>
+          <div class="search-item" onclick="handleSearchSelect('query')">
+            <span>💬 Business Query Assistant</span>
+            <span class="search-tag">Interactive</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav>
+        <ul class="nav-links">
+          <li><a href="{{ url_for('index') }}" class="nav-link {% if active_page == 'home' %}active{% endif %}">Home</a></li>
+          <li><a href="{{ url_for('submit') }}" class="nav-link {% if active_page == 'submit' %}active{% endif %}">Submit Document</a></li>
+          <li><a href="{{ url_for('index') }}#about" class="nav-link">About Us</a></li>
+          <li><a href="#query" onclick="triggerQueryFocus(event)" class="nav-link">Query</a></li>
+          <li>
+            <a href="{{ url_for('submit') }}" class="btn btn-primary" id="btnSubmitNav">
+              <span>Submit File</span>
+              <span>&rarr;</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+    </div>
+  </header>
+
+  <!-- Main Body Content -->
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Global Footer -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span class="brand-badge" style="padding: 4px 8px; font-size: 0.75rem;">BI</span>
+        <strong>BI Analyzer</strong> &mdash; Modern Financial Forensics & Executive Analytics.
+      </div>
+      <div class="footer-links">
+        <a href="{{ url_for('index') }}">Home</a>
+        <a href="{{ url_for('submit') }}">Submit File</a>
+        <a href="{{ url_for('index') }}#about">About Us</a>
+        <a href="{{ url_for('output', sample=1) }}">Demo Report</a>
+        <a href="#top" onclick="window.scrollTo({top: 0, behavior: 'smooth'}); return false;">Back to Top &uarr;</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Universal Interactive Script -->
+  <script>
+    // Header Search Functionality
+    const searchInput = document.getElementById('navSearchInput');
+    const searchDropdown = document.getElementById('navSearchDropdown');
+
+    if (searchInput && searchDropdown) {
+      searchInput.addEventListener('focus', () => {
+        searchDropdown.classList.add('active');
+      });
+
+      searchInput.addEventListener('input', (e) => {
+        const val = e.target.value.toLowerCase().trim();
+        searchDropdown.classList.add('active');
+        const items = searchDropdown.querySelectorAll('.search-item');
+        items.forEach(item => {
+          if (val === '' || item.innerText.toLowerCase().includes(val)) {
+            item.style.display = 'flex';
+          } else {
+            item.style.display = 'none';
+          }
+        });
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!searchInput.contains(e.target) && !searchDropdown.contains(e.target)) {
+          searchDropdown.classList.remove('active');
+        }
+      });
+    }
+
+    function handleSearchSelect(action) {
+      if (searchDropdown) searchDropdown.classList.remove('active');
+      if (action === 'submit') {
+        window.location.href = "{{ url_for('submit') }}";
+      } else if (action === 'sample') {
+        window.location.href = "{{ url_for('output', sample=1) }}";
+      } else if (action === 'about') {
+        window.location.href = "{{ url_for('index') }}#about";
+      } else if (action === 'query') {
+        triggerQueryFocus();
+      } else if (action === 'anomalies' || action === 'forecast') {
+        window.location.href = "{{ url_for('output', sample=1) }}";
+      }
+    }
+
+    function triggerQueryFocus(e) {
+      if (e) e.preventDefault();
+      const qInput = document.getElementById('queryInput');
+      if (qInput) {
+        qInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => qInput.focus(), 500);
+      } else {
+        window.location.href = "{{ url_for('index') }}#query";
+      }
+    }
+  </script>
+
+  {% block script_extra %}{% endblock %}
+</body>
+</html>
